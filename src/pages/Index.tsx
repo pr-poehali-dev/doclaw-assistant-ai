@@ -13,7 +13,7 @@ export default function Index() {
   const [started, setStarted] = useState(false);
   const [suggestions, setSuggestions] = useState<Doc[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [legendOpen, setLegendOpen] = useState(true);
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const suggestRef = useRef<HTMLDivElement>(null);
@@ -137,11 +137,7 @@ export default function Index() {
       {/* Main layout */}
       <div className="flex flex-1 max-w-7xl w-full mx-auto">
 
-        <Sidebar
-          legendOpen={legendOpen}
-          onLegendToggle={() => setLegendOpen(v => !v)}
-          onDocClick={handleDocClick}
-        />
+        <Sidebar />
 
         <main className="flex-1 flex flex-col px-4 py-6 gap-6 min-w-0">
           {activeTab === "chat" ? (

@@ -121,6 +121,23 @@
     }
   }
 
+  .legend-scroll {
+    animation: legendScroll 18s linear infinite;
+  }
+
+  .legend-scroll:hover {
+    animation-play-state: paused;
+  }
+
+  @keyframes legendScroll {
+    0% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(-33.333%);
+    }
+  }
+
   .chat-scrollbar::-webkit-scrollbar {
     width: 4px;
   }
