@@ -117,6 +117,13 @@ export default function Index() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  function getLocalAnswer(query: string): string {
+    const matches = searchDocs(query);
+    if (matches.length === 0) return "По вашему вопросу информация в базе документов не найдена. Уточните запрос или обратитесь к командованию.";
+    const doc = matches[0];
+    return `**${doc.title}**\n\n${doc.content}`;
+  }
+
   async function sendMessage(text: string) {
     if (!text.trim() || loading) return;
     if (!started) setStarted(true);
@@ -134,10 +141,11 @@ export default function Index() {
         body: JSON.stringify({ message: text.trim(), history: messages.map(m => ({ role: m.role, content: m.text })) }),
       });
       const data = await res.json();
-      const reply = data.reply || "Произошла ошибка. Попробуйте ещё раз.";
+      const reply = data.reply || getLocalAnswer(text.trim());
       setMessages((prev) => [...prev, { id: Date.now().toString() + "a", role: "assistant", text: reply, time: formatTime() }]);
     } catch {
-      setMessages((prev) => [...prev, { id: Date.now().toString() + "e", role: "assistant", text: "Сервер недоступен. Попробуйте позже.", time: formatTime() }]);
+      const localReply = getLocalAnswer(text.trim());
+      setMessages((prev) => [...prev, { id: Date.now().toString() + "e", role: "assistant", text: localReply, time: formatTime() }]);
     } finally {
       setLoading(false);
     }
@@ -152,9 +160,8 @@ export default function Index() {
   }
 
   function pickSuggestion(doc: Doc) {
-    setInput(doc.title);
     setShowSuggestions(false);
-    inputRef.current?.focus();
+    sendMessage(doc.title);
   }
 
   // Компонент выпадающего списка подсказок
