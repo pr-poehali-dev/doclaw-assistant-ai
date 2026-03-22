@@ -39,7 +39,6 @@ export default function Index() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"chat" | "docs">("chat");
-  // started = true когда хотя бы одно сообщение отправлено
   const [started, setStarted] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -48,15 +47,12 @@ export default function Index() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  // Фокус на поле ввода при старте
   useEffect(() => {
     if (!started) inputRef.current?.focus();
   }, [started]);
 
   async function sendMessage(text: string) {
     if (!text.trim() || loading) return;
-
-    // Первый запрос — переключаемся в режим чата
     if (!started) setStarted(true);
 
     const userMsg: Message = { id: Date.now().toString(), role: "user", text: text.trim(), time: formatTime() };
@@ -88,10 +84,10 @@ export default function Index() {
   }
 
   return (
-    <div className="min-h-screen bg-[hsl(210,20%,97%)] flex flex-col" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
+    <div className="min-h-screen bg-black flex flex-col text-white" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
 
       {/* Header */}
-      <header className="bg-[hsl(215,60%,16%)] text-white shadow-lg">
+      <header className="bg-[#0f0f0f] border-b border-white/10 shadow-lg">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img
@@ -99,20 +95,18 @@ export default function Index() {
               alt="Guard"
               className="w-10 h-10 object-contain"
             />
-            <div>
-              <div className="font-semibold text-base tracking-wide" style={{ fontFamily: "'IBM Plex Serif', serif" }}>
-                Помощник Guard
-              </div>
+            <div className="font-semibold text-base tracking-wide text-white" style={{ fontFamily: "'IBM Plex Serif', serif" }}>
+              Помощник Guard
             </div>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
-            <span className="text-xs text-blue-200">Онлайн</span>
+            <span className="text-xs text-white/50">Онлайн</span>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="max-w-6xl mx-auto px-6 flex gap-0 border-t border-blue-900/50">
+        <div className="max-w-6xl mx-auto px-6 flex gap-0 border-t border-white/10">
           {(["chat", "docs"] as const).map((tab) => (
             <button
               key={tab}
@@ -120,7 +114,7 @@ export default function Index() {
               className={`px-5 py-3 text-sm font-medium tracking-wide transition-all border-b-2 ${
                 activeTab === tab
                   ? "border-red-500 text-white"
-                  : "border-transparent text-blue-300 hover:text-white"
+                  : "border-transparent text-white/40 hover:text-white"
               }`}
             >
               {tab === "chat" ? (
@@ -138,18 +132,18 @@ export default function Index() {
 
         {activeTab === "chat" ? (
           <>
-            {/* Стартовый экран — по центру */}
             {!started ? (
+              /* Стартовый экран по центру */
               <div className="flex-1 flex flex-col items-center justify-center animate-fade-in">
                 <img
                   src="https://cdn.poehali.dev/projects/85353fca-ddfd-4c1f-b5b0-734001ac6cf9/bucket/74dd8a8f-7d36-4f03-bf91-a641f9112d81.png"
                   alt="Guard"
                   className="w-20 h-20 object-contain mb-6 opacity-90"
                 />
-                <h1 className="text-2xl font-semibold text-[hsl(215,35%,10%)] mb-2" style={{ fontFamily: "'IBM Plex Serif', serif" }}>
+                <h1 className="text-2xl font-semibold text-white mb-2" style={{ fontFamily: "'IBM Plex Serif', serif" }}>
                   Помощник Guard
                 </h1>
-                <p className="text-sm text-[hsl(215,16%,50%)] mb-10 text-center max-w-sm">
+                <p className="text-sm text-white/50 mb-10 text-center max-w-sm">
                   Задайте вопрос по документам, регламентам или правовым процедурам
                 </p>
 
@@ -159,7 +153,7 @@ export default function Index() {
                     <button
                       key={s}
                       onClick={() => sendMessage(s)}
-                      className="text-xs px-4 py-2 rounded-full border border-red-500 text-red-600 hover:bg-red-500 hover:text-white transition-all"
+                      className="text-xs px-4 py-2 rounded-full border border-red-600 text-red-400 hover:bg-red-600 hover:text-white transition-all"
                     >
                       {s}
                     </button>
@@ -168,7 +162,7 @@ export default function Index() {
 
                 {/* Поле ввода по центру */}
                 <div className="w-full max-w-xl">
-                  <div className="flex gap-3 items-end bg-white rounded-lg border-2 border-red-500 shadow-md px-4 py-3">
+                  <div className="flex gap-3 items-end bg-[#141414] rounded-lg border-2 border-red-600 shadow-md px-4 py-3">
                     <textarea
                       ref={inputRef}
                       value={input}
@@ -176,7 +170,7 @@ export default function Index() {
                       onKeyDown={handleKey}
                       placeholder="Введите ваш вопрос..."
                       rows={1}
-                      className="flex-1 resize-none text-sm outline-none bg-transparent max-h-32 text-[hsl(215,35%,10%)] placeholder:text-[hsl(215,16%,65%)]"
+                      className="flex-1 resize-none text-sm outline-none bg-transparent max-h-32 text-white placeholder:text-white/30"
                       style={{ lineHeight: "1.6" }}
                       onInput={(e) => {
                         const t = e.currentTarget;
@@ -192,14 +186,14 @@ export default function Index() {
                       <Icon name="Send" size={15} />
                     </button>
                   </div>
-                  <p className="text-[10px] text-[hsl(215,16%,60%)] mt-2 text-center">
+                  <p className="text-[10px] text-white/30 mt-2 text-center">
                     Enter — отправить · Shift+Enter — перенос строки
                   </p>
                 </div>
               </div>
             ) : (
-              /* Режим чата после первого сообщения */
-              <div className="flex-1 flex flex-col bg-white rounded border border-[hsl(214,20%,88%)] shadow-sm overflow-hidden animate-fade-in" style={{ minHeight: "calc(100vh - 200px)" }}>
+              /* Режим чата */
+              <div className="flex-1 flex flex-col bg-[#0f0f0f] rounded border border-white/10 shadow-sm overflow-hidden animate-fade-in" style={{ minHeight: "calc(100vh - 200px)" }}>
 
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-5 chat-scrollbar">
@@ -211,9 +205,7 @@ export default function Index() {
                     >
                       {/* Avatar */}
                       <div className={`w-8 h-8 rounded flex-shrink-0 flex items-center justify-center text-xs font-semibold ${
-                        msg.role === "assistant"
-                          ? "bg-[hsl(215,60%,16%)] text-white"
-                          : "bg-red-600 text-white"
+                        msg.role === "assistant" ? "bg-[#1a1a1a] border border-white/10" : "bg-red-600 text-white"
                       }`}>
                         {msg.role === "assistant"
                           ? <img src="https://cdn.poehali.dev/projects/85353fca-ddfd-4c1f-b5b0-734001ac6cf9/bucket/74dd8a8f-7d36-4f03-bf91-a641f9112d81.png" alt="G" className="w-5 h-5 object-contain" />
@@ -224,12 +216,12 @@ export default function Index() {
                       <div className={`max-w-[75%] flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}>
                         <div className={`px-4 py-3 rounded text-sm leading-relaxed ${
                           msg.role === "assistant"
-                            ? "bg-[hsl(210,20%,97%)] text-[hsl(215,35%,10%)] border border-[hsl(214,20%,88%)]"
+                            ? "bg-[#1a1a1a] text-white border border-white/10"
                             : "bg-red-600 text-white"
                         }`}>
                           {msg.text}
                         </div>
-                        <span className="text-[10px] text-[hsl(215,16%,60%)] px-1">{msg.time}</span>
+                        <span className="text-[10px] text-white/30 px-1">{msg.time}</span>
                       </div>
                     </div>
                   ))}
@@ -237,10 +229,10 @@ export default function Index() {
                   {/* Typing indicator */}
                   {loading && (
                     <div className="flex gap-3 animate-fade-in">
-                      <div className="w-8 h-8 rounded bg-[hsl(215,60%,16%)] flex items-center justify-center">
+                      <div className="w-8 h-8 rounded bg-[#1a1a1a] border border-white/10 flex items-center justify-center">
                         <img src="https://cdn.poehali.dev/projects/85353fca-ddfd-4c1f-b5b0-734001ac6cf9/bucket/74dd8a8f-7d36-4f03-bf91-a641f9112d81.png" alt="G" className="w-5 h-5 object-contain" />
                       </div>
-                      <div className="px-4 py-3 rounded bg-[hsl(210,20%,97%)] border border-[hsl(214,20%,88%)] flex items-center gap-1.5">
+                      <div className="px-4 py-3 rounded bg-[#1a1a1a] border border-white/10 flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-typing" style={{ animationDelay: "0s" }}></span>
                         <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-typing" style={{ animationDelay: "0.2s" }}></span>
                         <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-typing" style={{ animationDelay: "0.4s" }}></span>
@@ -251,7 +243,7 @@ export default function Index() {
                 </div>
 
                 {/* Input в чате */}
-                <div className="border-t border-[hsl(214,20%,88%)] p-4 bg-white">
+                <div className="border-t border-white/10 p-4 bg-[#0f0f0f]">
                   <div className="flex gap-3 items-end">
                     <textarea
                       value={input}
@@ -260,7 +252,7 @@ export default function Index() {
                       placeholder="Введите следующий вопрос..."
                       rows={1}
                       disabled={loading}
-                      className="flex-1 resize-none rounded border-2 border-red-400 focus:border-red-600 px-4 py-3 text-sm outline-none transition-colors bg-[hsl(210,20%,98%)] disabled:opacity-50 max-h-32"
+                      className="flex-1 resize-none rounded border-2 border-red-700 focus:border-red-500 px-4 py-3 text-sm outline-none transition-colors bg-[#141414] text-white placeholder:text-white/30 disabled:opacity-50 max-h-32"
                       style={{ lineHeight: "1.5" }}
                       onInput={(e) => {
                         const t = e.currentTarget;
@@ -276,7 +268,7 @@ export default function Index() {
                       <Icon name="Send" size={16} />
                     </button>
                   </div>
-                  <p className="text-[10px] text-[hsl(215,16%,60%)] mt-2">
+                  <p className="text-[10px] text-white/30 mt-2">
                     Enter — отправить · Shift+Enter — перенос строки
                   </p>
                 </div>
@@ -288,15 +280,15 @@ export default function Index() {
           <div className="flex-1">
             <div className="grid gap-4">
               <div className="flex items-center justify-between mb-2">
-                <h2 className="text-lg font-semibold text-[hsl(215,35%,10%)]" style={{ fontFamily: "'IBM Plex Serif', serif" }}>
+                <h2 className="text-lg font-semibold text-white" style={{ fontFamily: "'IBM Plex Serif', serif" }}>
                   База документов
                 </h2>
-                <span className="text-xs text-[hsl(215,16%,47%)]">{DOCS.length} документа</span>
+                <span className="text-xs text-white/40">{DOCS.length} документа</span>
               </div>
               {DOCS.map((doc) => (
                 <div
                   key={doc.id}
-                  className="bg-white rounded border border-[hsl(214,20%,88%)] shadow-sm p-5 hover:border-red-400 transition-all cursor-pointer group"
+                  className="bg-[#0f0f0f] rounded border border-white/10 shadow-sm p-5 hover:border-red-600 transition-all cursor-pointer group"
                   onClick={() => {
                     setActiveTab("chat");
                     sendMessage(`Расскажи подробнее о документе: "${doc.title}"`);
@@ -304,28 +296,28 @@ export default function Index() {
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded bg-[hsl(215,60%,16%)] flex items-center justify-center flex-shrink-0">
-                        <Icon name="FileText" size={16} className="text-red-400" />
+                      <div className="w-10 h-10 rounded bg-[#1a1a1a] border border-white/10 flex items-center justify-center flex-shrink-0">
+                        <Icon name="FileText" size={16} className="text-red-500" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[10px] uppercase tracking-widest font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded">
+                          <span className="text-[10px] uppercase tracking-widest font-semibold text-red-500 bg-red-950/50 px-2 py-0.5 rounded">
                             {doc.tag}
                           </span>
                         </div>
-                        <h3 className="font-semibold text-[hsl(215,35%,10%)] text-sm mb-1">{doc.title}</h3>
-                        <p className="text-xs text-[hsl(215,16%,47%)]">{doc.excerpt}</p>
+                        <h3 className="font-semibold text-white text-sm mb-1">{doc.title}</h3>
+                        <p className="text-xs text-white/40">{doc.excerpt}</p>
                       </div>
                     </div>
-                    <Icon name="ChevronRight" size={16} className="text-[hsl(214,20%,70%)] group-hover:text-red-500 transition-colors flex-shrink-0 mt-1" />
+                    <Icon name="ChevronRight" size={16} className="text-white/20 group-hover:text-red-500 transition-colors flex-shrink-0 mt-1" />
                   </div>
                 </div>
               ))}
 
-              <div className="bg-white rounded border border-dashed border-[hsl(214,20%,78%)] p-6 text-center">
-                <Icon name="Upload" size={20} className="text-[hsl(215,16%,60%)] mx-auto mb-2" />
-                <p className="text-sm text-[hsl(215,16%,47%)]">Добавить документ</p>
-                <p className="text-xs text-[hsl(215,16%,65%)] mt-1">PDF, DOCX, TXT</p>
+              <div className="bg-[#0f0f0f] rounded border border-dashed border-white/15 p-6 text-center">
+                <Icon name="Upload" size={20} className="text-white/30 mx-auto mb-2" />
+                <p className="text-sm text-white/40">Добавить документ</p>
+                <p className="text-xs text-white/25 mt-1">PDF, DOCX, TXT</p>
               </div>
             </div>
           </div>
