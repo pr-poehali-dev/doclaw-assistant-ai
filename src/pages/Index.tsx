@@ -8,20 +8,15 @@ interface Message {
   time: string;
 }
 
-const DOCS = [
-  {
-    id: "1",
-    title: "Порядок задержания бойца",
-    tag: "Регламент",
-    excerpt: "Задержание бойца регулярного формирования или наёмника",
-  },
-  {
-    id: "2",
-    title: "Задержание высшего командования",
-    tag: "Регламент",
-    excerpt: "Только по прямому вызову на трибунал",
-  },
-];
+interface Doc {
+  id: string;
+  title: string;
+  tag: string;
+  content: string;
+}
+
+// База документов — пустая, добавляйте свои
+const DOCS: Doc[] = [];
 
 const SUGGESTIONS = [
   "Каков порядок задержания бойца?",
@@ -34,14 +29,38 @@ function formatTime() {
   return new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
 }
 
+function searchDocs(query: string): Doc[] {
+  if (!query.trim() || query.trim().length < 2) return [];
+  const words = query.toLowerCase().split(/\s+/).filter(w => w.length >= 2);
+  return DOCS.filter(doc => {
+    const haystack = (doc.title + " " + doc.tag + " " + doc.content).toLowerCase();
+    return words.some(word => haystack.includes(word));
+  }).slice(0, 5);
+}
+
+function highlightMatch(text: string, query: string) {
+  const words = query.toLowerCase().split(/\s+/).filter(w => w.length >= 2);
+  if (!words.length) return text;
+  const regex = new RegExp(`(${words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "gi");
+  const parts = text.split(regex);
+  return parts.map((part, i) =>
+    regex.test(part)
+      ? <mark key={i} className="bg-red-600/30 text-red-300 rounded px-0.5">{part}</mark>
+      : part
+  );
+}
+
 export default function Index() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"chat" | "docs">("chat");
   const [started, setStarted] = useState(false);
+  const [suggestions, setSuggestions] = useState<Doc[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const suggestRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -51,9 +70,28 @@ export default function Index() {
     if (!started) inputRef.current?.focus();
   }, [started]);
 
+  // Поиск по документам при вводе
+  useEffect(() => {
+    const results = searchDocs(input);
+    setSuggestions(results);
+    setShowSuggestions(results.length > 0 && input.trim().length >= 2);
+  }, [input]);
+
+  // Закрытие подсказок при клике вне
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (suggestRef.current && !suggestRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
   async function sendMessage(text: string) {
     if (!text.trim() || loading) return;
     if (!started) setStarted(true);
+    setShowSuggestions(false);
 
     const userMsg: Message = { id: Date.now().toString(), role: "user", text: text.trim(), time: formatTime() };
     setMessages((prev) => [...prev, userMsg]);
@@ -81,6 +119,48 @@ export default function Index() {
       e.preventDefault();
       sendMessage(input);
     }
+    if (e.key === "Escape") setShowSuggestions(false);
+  }
+
+  function pickSuggestion(doc: Doc) {
+    setInput(doc.title);
+    setShowSuggestions(false);
+    inputRef.current?.focus();
+  }
+
+  // Компонент выпадающего списка подсказок
+  function SuggestionsDropdown({ above = false }: { above?: boolean }) {
+    if (!showSuggestions) return null;
+    return (
+      <div
+        ref={suggestRef}
+        className={`absolute left-0 right-0 z-50 bg-[#1a1a1a] border border-white/15 rounded-lg shadow-2xl overflow-hidden ${above ? "bottom-full mb-2" : "top-full mt-2"}`}
+      >
+        <div className="px-3 py-2 border-b border-white/10">
+          <span className="text-[10px] uppercase tracking-widest text-white/30 font-semibold">Найдено в документах</span>
+        </div>
+        {suggestions.map((doc) => (
+          <button
+            key={doc.id}
+            onMouseDown={() => pickSuggestion(doc)}
+            className="w-full flex items-start gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-left group"
+          >
+            <div className="w-7 h-7 rounded bg-red-950/60 border border-red-900/40 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <Icon name="FileText" size={12} className="text-red-400" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm text-white font-medium truncate">
+                {highlightMatch(doc.title, input)}
+              </div>
+              <div className="text-xs text-white/40 truncate mt-0.5">
+                {highlightMatch(doc.content.slice(0, 80), input)}
+              </div>
+            </div>
+            <Icon name="ArrowUpLeft" size={13} className="text-white/20 group-hover:text-red-400 flex-shrink-0 mt-1 transition-colors" />
+          </button>
+        ))}
+      </div>
+    );
   }
 
   return (
@@ -147,7 +227,7 @@ export default function Index() {
                   Задайте вопрос по документам, регламентам или правовым процедурам
                 </p>
 
-                {/* Подсказки */}
+                {/* Быстрые вопросы */}
                 <div className="flex flex-wrap gap-2 justify-center mb-8 max-w-xl">
                   {SUGGESTIONS.map((s) => (
                     <button
@@ -160,14 +240,16 @@ export default function Index() {
                   ))}
                 </div>
 
-                {/* Поле ввода по центру */}
-                <div className="w-full max-w-xl">
+                {/* Поле ввода по центру с автодополнением */}
+                <div className="w-full max-w-xl relative">
+                  <SuggestionsDropdown above={false} />
                   <div className="flex gap-3 items-end bg-[#141414] rounded-lg border-2 border-red-600 shadow-md px-4 py-3">
                     <textarea
                       ref={inputRef}
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={handleKey}
+                      onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                       placeholder="Введите ваш вопрос..."
                       rows={1}
                       className="flex-1 resize-none text-sm outline-none bg-transparent max-h-32 text-white placeholder:text-white/30"
@@ -186,7 +268,6 @@ export default function Index() {
                       <Icon name="Send" size={15} />
                     </button>
                   </div>
-
                 </div>
               </div>
             ) : (
@@ -201,7 +282,6 @@ export default function Index() {
                       className={`flex gap-3 animate-fade-in ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}
                       style={{ animationDelay: `${i * 0.03}s` }}
                     >
-                      {/* Avatar */}
                       <div className={`w-8 h-8 rounded flex-shrink-0 flex items-center justify-center text-xs font-semibold ${
                         msg.role === "assistant" ? "bg-[#1a1a1a] border border-white/10" : "bg-red-600 text-white"
                       }`}>
@@ -210,7 +290,6 @@ export default function Index() {
                           : "Вы"}
                       </div>
 
-                      {/* Bubble */}
                       <div className={`max-w-[75%] flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}>
                         <div className={`px-4 py-3 rounded text-sm leading-relaxed ${
                           msg.role === "assistant"
@@ -224,7 +303,6 @@ export default function Index() {
                     </div>
                   ))}
 
-                  {/* Typing indicator */}
                   {loading && (
                     <div className="flex gap-3 animate-fade-in">
                       <div className="w-8 h-8 rounded bg-[#1a1a1a] border border-white/10 flex items-center justify-center">
@@ -240,13 +318,15 @@ export default function Index() {
                   <div ref={bottomRef} />
                 </div>
 
-                {/* Input в чате */}
-                <div className="border-t border-white/10 p-4 bg-[#0f0f0f]">
+                {/* Input в чате с автодополнением */}
+                <div className="border-t border-white/10 p-4 bg-[#0f0f0f] relative">
+                  <SuggestionsDropdown above={true} />
                   <div className="flex gap-3 items-end">
                     <textarea
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={handleKey}
+                      onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                       placeholder="Задайте (RP) Задай свой вопрос..."
                       rows={1}
                       disabled={loading}
@@ -266,7 +346,6 @@ export default function Index() {
                       <Icon name="Send" size={16} />
                     </button>
                   </div>
-
                 </div>
               </div>
             )}
@@ -279,8 +358,17 @@ export default function Index() {
                 <h2 className="text-lg font-semibold text-white" style={{ fontFamily: "'IBM Plex Serif', serif" }}>
                   База документов
                 </h2>
-                <span className="text-xs text-white/40">{DOCS.length} документа</span>
+                <span className="text-xs text-white/40">{DOCS.length} документов</span>
               </div>
+
+              {DOCS.length === 0 && (
+                <div className="bg-[#0f0f0f] rounded border border-white/10 p-10 text-center">
+                  <Icon name="FileX" size={28} className="text-white/20 mx-auto mb-3" />
+                  <p className="text-sm text-white/40">Документы ещё не добавлены</p>
+                  <p className="text-xs text-white/25 mt-1">Загрузите документы, чтобы нейронка искала по ним</p>
+                </div>
+              )}
+
               {DOCS.map((doc) => (
                 <div
                   key={doc.id}
@@ -296,13 +384,11 @@ export default function Index() {
                         <Icon name="FileText" size={16} className="text-red-500" />
                       </div>
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[10px] uppercase tracking-widest font-semibold text-red-500 bg-red-950/50 px-2 py-0.5 rounded">
-                            {doc.tag}
-                          </span>
-                        </div>
-                        <h3 className="font-semibold text-white text-sm mb-1">{doc.title}</h3>
-                        <p className="text-xs text-white/40">{doc.excerpt}</p>
+                        <span className="text-[10px] uppercase tracking-widest font-semibold text-red-500 bg-red-950/50 px-2 py-0.5 rounded">
+                          {doc.tag}
+                        </span>
+                        <h3 className="font-semibold text-white text-sm mb-1 mt-1">{doc.title}</h3>
+                        <p className="text-xs text-white/40">{doc.content.slice(0, 100)}</p>
                       </div>
                     </div>
                     <Icon name="ChevronRight" size={16} className="text-white/20 group-hover:text-red-500 transition-colors flex-shrink-0 mt-1" />
