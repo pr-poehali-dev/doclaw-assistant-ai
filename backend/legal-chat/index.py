@@ -1,18 +1,28 @@
 import json
 import os
 import urllib.request
-import urllib.error
 
-SYSTEM_PROMPT = """Ты — профессиональный юридический ассистент для бизнеса. 
-Отвечаешь строго, по делу, без лишних слов. Используй деловой стиль речи.
-Ты знаешь российское законодательство, корпоративные регламенты и правовые процедуры.
-Если вопрос выходит за рамки правовой тематики — вежливо перенаправь к юридическим вопросам.
-Предупреждай, когда ситуация требует консультации живого юриста.
-Отвечай на русском языке."""
+SYSTEM_PROMPT = """Ты — помощник Корусантской гвардии (Guard). Отвечаешь строго по регламентам организации.
+Правила:
+- Отвечай ТОЛЬКО на основе предоставленных документов и регламентов.
+- Если в документах нет ответа — так и скажи: "В регламентах данная ситуация не описана. Обратитесь к командованию."
+- Отвечай чётко, по делу, без воды. Деловой стиль.
+- Если вопрос касается конкретной процедуры — перечисляй шаги по порядку.
+- Отвечай на русском языке."""
+
+
+def build_system_prompt(docs: list) -> str:
+    if not docs:
+        return SYSTEM_PROMPT
+    docs_text = "\n\n".join(
+        f"=== {d.get('title', '')} ===\n{d.get('content', '')}"
+        for d in docs
+    )
+    return f"{SYSTEM_PROMPT}\n\n--- БАЗА РЕГЛАМЕНТОВ ---\n{docs_text}\n--- КОНЕЦ БАЗЫ ---"
 
 
 def handler(event: dict, context) -> dict:
-    """Юридический ИИ-ассистент: принимает вопрос, возвращает консультацию через OpenAI."""
+    """Помощник Guard: отвечает на вопросы строго по переданным регламентам через OpenAI."""
 
     cors_headers = {
         "Access-Control-Allow-Origin": "*",
@@ -27,6 +37,7 @@ def handler(event: dict, context) -> dict:
     body = json.loads(event.get("body") or "{}")
     message = body.get("message", "").strip()
     history = body.get("history", [])
+    docs = body.get("docs", [])  # список {title, content} из фронтенда
 
     if not message:
         return {
@@ -43,7 +54,9 @@ def handler(event: dict, context) -> dict:
             "body": json.dumps({"error": "API ключ не настроен"}),
         }
 
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    system_content = build_system_prompt(docs)
+
+    messages = [{"role": "system", "content": system_content}]
     for h in history[-10:]:
         role = h.get("role")
         content = h.get("content", "")
@@ -54,8 +67,8 @@ def handler(event: dict, context) -> dict:
     payload = json.dumps({
         "model": "gpt-4o-mini",
         "messages": messages,
-        "max_tokens": 1000,
-        "temperature": 0.3,
+        "max_tokens": 1200,
+        "temperature": 0.2,
     }).encode("utf-8")
 
     req = urllib.request.Request(

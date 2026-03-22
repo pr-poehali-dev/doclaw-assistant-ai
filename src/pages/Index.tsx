@@ -134,11 +134,20 @@ export default function Index() {
     setInput("");
     setLoading(true);
 
+    // Находим релевантные документы и передаём их в запрос
+    const relevantDocs = searchDocs(text.trim()).length > 0
+      ? searchDocs(text.trim()).map(d => ({ title: d.title, content: d.content }))
+      : DOCS.map(d => ({ title: d.title, content: d.content }));
+
     try {
       const res = await fetch("https://functions.poehali.dev/765ed3ba-a58f-4d33-bee6-a35cc1ed691f", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text.trim(), history: messages.map(m => ({ role: m.role, content: m.text })) }),
+        body: JSON.stringify({
+          message: text.trim(),
+          history: messages.map(m => ({ role: m.role, content: m.text })),
+          docs: relevantDocs,
+        }),
       });
       const data = await res.json();
       const reply = data.reply || getLocalAnswer(text.trim());
