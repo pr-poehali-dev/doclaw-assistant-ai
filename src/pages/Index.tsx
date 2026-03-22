@@ -186,9 +186,7 @@ export default function Index() {
                       <Icon name="Send" size={15} />
                     </button>
                   </div>
-                  <p className="text-[10px] text-white/30 mt-2 text-center">
-                    Enter — отправить · Shift+Enter — перенос строки
-                  </p>
+
                 </div>
               </div>
             ) : (
@@ -249,7 +247,7 @@ export default function Index() {
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={handleKey}
-                      placeholder="Введите следующий вопрос..."
+                      placeholder="Задайте (RP) Задай свой вопрос..."
                       rows={1}
                       disabled={loading}
                       className="flex-1 resize-none rounded border-2 border-red-700 focus:border-red-500 px-4 py-3 text-sm outline-none transition-colors bg-[#141414] text-white placeholder:text-white/30 disabled:opacity-50 max-h-32"
@@ -268,9 +266,7 @@ export default function Index() {
                       <Icon name="Send" size={16} />
                     </button>
                   </div>
-                  <p className="text-[10px] text-white/30 mt-2">
-                    Enter — отправить · Shift+Enter — перенос строки
-                  </p>
+
                 </div>
               </div>
             )}
