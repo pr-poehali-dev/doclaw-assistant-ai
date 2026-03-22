@@ -61,7 +61,7 @@ export default function Index() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/legal-chat", {
+      const res = await fetch("https://functions.poehali.dev/765ed3ba-a58f-4d33-bee6-a35cc1ed691f", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text.trim(), history: messages.map(m => ({ role: m.role, content: m.text })) }),
@@ -247,7 +247,7 @@ export default function Index() {
                     { icon: "ClipboardList", text: "Порядок действий" },
                   ].map((item) => (
                     <li key={item.text} className="flex items-center gap-2.5 text-sm text-[hsl(215,35%,20%)]">
-                      <Icon name={item.icon as any} size={14} className="text-[hsl(42,85%,48%)] flex-shrink-0" />
+                      <Icon name={item.icon} fallback="Circle" size={14} className="text-[hsl(42,85%,48%)] flex-shrink-0" />
                       {item.text}
                     </li>
                   ))}
