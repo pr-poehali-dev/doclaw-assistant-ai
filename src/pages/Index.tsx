@@ -90,15 +90,14 @@ export default function Index() {
       <header className="bg-[hsl(215,60%,16%)] text-white shadow-lg">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded bg-[hsl(42,85%,48%)] flex items-center justify-center">
-              <Icon name="Scale" size={18} className="text-[hsl(215,60%,16%)]" />
-            </div>
+            <img
+              src="https://cdn.poehali.dev/projects/85353fca-ddfd-4c1f-b5b0-734001ac6cf9/bucket/74dd8a8f-7d36-4f03-bf91-a641f9112d81.png"
+              alt="Guard"
+              className="w-10 h-10 object-contain"
+            />
             <div>
               <div className="font-semibold text-base tracking-wide" style={{ fontFamily: "'IBM Plex Serif', serif" }}>
-                ЮрКонсул
-              </div>
-              <div className="text-[10px] text-blue-200 uppercase tracking-widest font-light">
-                ИИ-ассистент · Правовые консультации
+                Помощник Guard
               </div>
             </div>
           </div>
